@@ -6,11 +6,11 @@ from CosyTrafo import (
     add_polar_coordinates,
     add_spherical_coordinates,
     # ----- Coordinate Transform
-    cylindrical2spherical,
-    spherical2cylindrical,
-    spherical2cartesian,
-    cartesian2spherical,
-    polar2cartesian
+    cylindrical_to_spherical,
+    spherical_to_cylindrical,
+    spherical_to_cartesian,
+    cartesian_to_spherical,
+    polar_to_cartesian
 )
 
 
@@ -31,23 +31,23 @@ class CoordinateTransformationTest(unittest.TestCase):
     decimal_accuracy = 10
 
     def test_spherical2cartesian_p1(self):
-        p1_o_x_test = spherical2cartesian(self.p1_o_s, degree=True)
+        p1_o_x_test = spherical_to_cartesian(*self.p1_o_s, degree=True)
         np.testing.assert_almost_equal(p1_o_x_test, self.p1_o_x, decimal=self.decimal_accuracy)
 
     def test_cartesian2spherical_p1(self):
-        p1_o_s_test = cartesian2spherical(self.p1_o_x, degree=True)
+        p1_o_s_test = cartesian_to_spherical(*self.p1_o_x, degree=True)
         np.testing.assert_almost_equal(p1_o_s_test, self.p1_o_s, decimal=self.decimal_accuracy)
 
     def test_cartesian2spherical_p2(self):
-        p2_o_s_test = cartesian2spherical(self.p2_o_x, degree=True)
+        p2_o_s_test = cartesian_to_spherical(*self.p2_o_x, degree=True)
         np.testing.assert_almost_equal(p2_o_s_test, self.p2_o_s, decimal=self.decimal_accuracy)
 
     def test_cartesian2spherical_p1_p2(self):
-        p1_p2_o_s_test = cartesian2spherical(self.p1_p2_x, degree=True)
+        p1_p2_o_s_test = cartesian_to_spherical(*self.p1_p2_x, degree=True)
         np.testing.assert_almost_equal(p1_p2_o_s_test, self.p1_p2_s, decimal=self.decimal_accuracy)
 
     def test_spherical2cartesian_cartesian2spherical_p1(self):
-        p1_o_s_test = cartesian2spherical(spherical2cartesian(self.p1_o_s, degree=True), degree=True)
+        p1_o_s_test = cartesian_to_spherical(*spherical_to_cartesian(*self.p1_o_s, degree=True), degree=True)
         np.testing.assert_almost_equal(p1_o_s_test, self.p1_o_s, decimal=self.decimal_accuracy)
 
     def test_add_spherical_coordinates_p1_p2(self):
@@ -55,11 +55,12 @@ class CoordinateTransformationTest(unittest.TestCase):
         np.testing.assert_almost_equal(p1_p2_s_test, self.p1_p2_s, decimal=self.decimal_accuracy)
 
     def test_add_spherical_coordinates_in_cartesian_p1_p2(self):
-        p1_p2_x_test1 = spherical2cartesian(add_spherical_coordinates(self.p1_o_s, self.p2_o_s, degree=True),
-                                            degree=True)
+        p1_p2_x_test1 = spherical_to_cartesian(
+            *add_spherical_coordinates(self.p1_o_s, self.p2_o_s, degree=True),
+            degree=True)
 
-        p1_p2_x_test2 = tuple([np.sum(el) for el in zip(spherical2cartesian(self.p1_o_s, degree=True),
-                                                        spherical2cartesian(self.p2_o_s, degree=True))])
+        p1_p2_x_test2 = tuple([np.sum(el) for el in zip(spherical_to_cartesian(*self.p1_o_s, degree=True),
+                                                        spherical_to_cartesian(*self.p2_o_s, degree=True))])
         print(f"DEBUGGING: p1_p2_x_test1={p1_p2_x_test1} p1_p2_x_test2={p1_p2_x_test2} self.p1_p2_x={self.p1_p2_x}")
         # check "relative" correctness
         np.testing.assert_almost_equal(p1_p2_x_test1, p1_p2_x_test2, decimal=self.decimal_accuracy)
@@ -68,11 +69,11 @@ class CoordinateTransformationTest(unittest.TestCase):
         np.testing.assert_almost_equal(p1_p2_x_test2, self.p1_p2_x, decimal=self.decimal_accuracy)
 
     def test_cartesian2spherical_p3(self):
-        p3_o_s_test = cartesian2spherical(self.p3_o_x, degree=True)
+        p3_o_s_test = cartesian_to_spherical(*self.p3_o_x, degree=True)
         np.testing.assert_almost_equal(p3_o_s_test, self.p3_o_s, decimal=self.decimal_accuracy)
 
     def test_spherical2cartesian_p3(self):
-        p3_o_x_test = spherical2cartesian(self.p3_o_s, degree=True)
+        p3_o_x_test = spherical_to_cartesian(*self.p3_o_s, degree=True)
         np.testing.assert_almost_equal(p3_o_x_test, self.p3_o_x, decimal=self.decimal_accuracy)
 
 

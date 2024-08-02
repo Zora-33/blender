@@ -1,6 +1,7 @@
 from typing import Tuple
 from math import sqrt, pi, sin, cos, asin, acos, atan2
 
+
 def deg2rad(val: float) -> float:
     return val / 180 * pi
 
@@ -8,8 +9,10 @@ def deg2rad(val: float) -> float:
 def rad2deg(val: float) -> float:
     return val / pi * 180
 
+
 def sin_deg(deg: float) -> float:
     return sin(deg / 180. * pi)
+
 
 def cos_deg(deg: float) -> float:
     return cos(deg / 180. * pi)
@@ -50,73 +53,110 @@ def add_polar_coordinates(*args: Tuple[float, float], degree: bool = False) -> T
 def add_spherical_coordinates(*args: Tuple[float, float, float], degree: bool = False) -> Tuple[float, float, float]:
     xyz = [0.0, 0.0, 0.0]
     for el in args:
-        for i, x in enumerate(spherical2cartesian(el, degree=degree)):
+        for i, x in enumerate(spherical_to_cartesian(*el, degree=degree)):
             xyz[i] += x
-    return cartesian2spherical(tuple(xyz), degree=degree)
+    return cartesian_to_spherical(*tuple(xyz), degree=degree)
 
 
 # ----- Coordinate Transform
-def cylindrical2spherical(vec: Tuple[float, float, float]) -> Tuple[float, float, float]:
-    # extract cylindrical coordinates (index cc)
-    radius_cc, azimuth_angle_cc, elevation_cc = vec
+def cylindrical_to_spherical(
+        r: float,
+        azimuth_angle: float,
+        h: float
+) -> Tuple[float, float, float]:
+    """transforms cylindrical coordinates to spherical coordinates"""
     # transform to spherical coordinates (index sc)
-    distance_sc = sqrt(radius_cc**2 + elevation_cc**2)
-    polar_angle_sc = acos(elevation_cc / distance_sc)
-    azimuth_angle_sc = azimuth_angle_cc
+    distance_sc = sqrt(r**2 + h**2)
+    polar_angle_sc = acos(h / distance_sc)
 
-    return distance_sc, polar_angle_sc, azimuth_angle_sc
+    return distance_sc, polar_angle_sc, azimuth_angle
 
 
-def spherical2cylindrical(vec: Tuple[float, float, float]) -> Tuple[float, float, float]:
-    # extract spherical coordinates (index sc)
-    distance_sc, polar_angle_sc, azimuth_angle_sc = vec
+def spherical_to_cylindrical(
+        r: float,
+        polar_angle: float,
+        azimuth_angle: float
+) -> Tuple[float, float, float]:
+    """transforms spherical coordinates to cylindrical coordinates"""
+
     # transform to cylindrical coordinates (index cc)
-    radius_cc = distance_sc * sin(polar_angle_sc)
-    azimuth_angle_cc = azimuth_angle_sc
-    elevation_cc = distance_sc * cos(polar_angle_sc)
+    radius_cc = r * sin(polar_angle)
+    azimuth_angle_cc = azimuth_angle
+    elevation_cc = r * cos(polar_angle)
 
     return radius_cc, azimuth_angle_cc, elevation_cc
 
 
-def spherical2cartesian(vec: Tuple[float, float, float], degree: bool = False) -> Tuple[float, float, float]:
-    # extract spherical coordinates (index sc)
-    distance_sc, polar_angle_sc, azimuth_angle_sc = vec
+def spherical_to_cartesian(
+        r: float,
+        polar_angle: float,
+        azimuth_angle: float,
+        degree: bool = False
+) -> Tuple[float, float, float]:
+    """transforms spherical coordinates to cartesian coordinates"""
+
     # transform to radiant if input is provided in degree
     if degree:
-        polar_angle_sc = deg2rad(polar_angle_sc)
-        azimuth_angle_sc = deg2rad(azimuth_angle_sc)
-    assert distance_sc >= 0, f"The radius is supposed to be positive but was {distance_sc}."
-    assert (0 <= polar_angle_sc <= pi), f"The polar angle must be in [0, +pi] but was {polar_angle_sc} rad."
-    assert (-pi <= azimuth_angle_sc <= pi), f"The azimuth angle must be in [-pi, +pi] but was {azimuth_angle_sc} rad."
+        polar_angle = deg2rad(polar_angle)
+        azimuth_angle = deg2rad(azimuth_angle)
+
+    assert r >= 0, f"The radius is supposed to be positive but was {r}."
+    assert (0 <= polar_angle <= pi), f"The polar angle must be in [0, +pi] but was {polar_angle} rad."
+    assert (-pi <= azimuth_angle <= pi), f"The azimuth angle must be in [-pi, +pi] but was {azimuth_angle} rad."
 
     # transform to cartesian coordinates
-    x = distance_sc * sin(polar_angle_sc) * cos(azimuth_angle_sc)
-    y = distance_sc * sin(polar_angle_sc) * sin(azimuth_angle_sc)
-    z = distance_sc * cos(polar_angle_sc)
+    x = r * sin(polar_angle) * cos(azimuth_angle)
+    y = r * sin(polar_angle) * sin(azimuth_angle)
+    z = r * cos(polar_angle)
 
     return x, y, z
 
 
-def cartesian2spherical(vec: Tuple[float, float, float], degree: bool = False) -> Tuple[float, float, float]:
-    x, y, z = vec
-    distance_sc = sqrt(x ** 2 + y ** 2 + z ** 2)
-    polar_angle_sc = acos(z / distance_sc) if distance_sc > 0 else 0
-    azimuth_angle_sc = atan2(y, x)
+def cartesian_to_spherical(
+        x: float,
+        y: float,
+        z: float,
+        degree: bool = False
+) -> Tuple[float, float, float]:
+    """transforms cartesian coordinates to spherical coordinates"""
+
+    r = sqrt(x ** 2 + y ** 2 + z ** 2)
+    polar_angle = acos(z / r) if r > 0 else 0
+    azimuth_angle = atan2(y, x)
 
     if degree:
-        polar_angle_sc = rad2deg(polar_angle_sc)
-        azimuth_angle_sc = rad2deg(azimuth_angle_sc)
+        polar_angle = rad2deg(polar_angle)
+        azimuth_angle = rad2deg(azimuth_angle)
 
-    return distance_sc, polar_angle_sc, azimuth_angle_sc
+    return r, polar_angle, azimuth_angle
 
 
-def polar2cartesian(vec: Tuple[float, float], degree: bool = False) -> Tuple[float, float]:
-    distance_pc = vec[0]
-    angle_pc = vec[1]
+def polar_to_cartesian(
+        r: float,
+        phi: float,
+        degree: bool = False
+) -> Tuple[float, float]:
+    """transforms polar coordinates to 2D cartesian coordinates"""
+
     # transform to radiant if input is provided in degree
     if degree:
-        angle_pc = deg2rad(angle_pc)
+        phi = deg2rad(phi)
 
-    x = distance_pc * cos(angle_pc)
-    y = distance_pc * sin(angle_pc)
+    x = r * cos(phi)
+    y = r * sin(phi)
     return x, y
+
+
+def cartesian_to_cylindrical(x: float, y: float, z: float) -> Tuple[float, float, float]:
+    """transforms from cartesian coordinates to cylindrical coordinates"""
+    r = sqrt(x**2 + y**2)
+    theta = atan2(y, x)
+
+    return r, theta, z
+
+
+def cylindrical_to_cartesian(r: float, theta: float, z: float) -> Tuple[float, float, float]:
+    """transforms from cylindrical coordinates to cartesian coordinates"""
+    x = r * cos(theta)
+    y = r * sin(theta)
+    return x, y, z
