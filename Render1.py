@@ -6,11 +6,12 @@ import bpy
 import numpy as np
 from mathutils import Vector, Matrix
 from typing import Tuple, Union, List, Dict
+from numpy.typing import NDArray
 
 
 def create_perpendicular_vector(
-        v: Tuple[Union[float, int], Union[float, int], Union[float, int]]
-) -> Tuple[np.ndarray, np.ndarray]:
+    v: Union[List[float], Tuple[float, float, float], NDArray[np.float64]]
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     """find two simple vector which perpendicular to v"""
     x, y, z = v
     if x == 0 and y == 0:
@@ -26,9 +27,13 @@ def create_perpendicular_vector(
 
 
 def look_at(
-        camera_location: Tuple[Union[float, int], Union[float, int], Union[float, int]],
-        target_location: Tuple[Union[float, int], Union[float, int], Union[float, int]]
-) -> tuple:
+    camera_location: Union[
+        List[float], Tuple[float, float, float], NDArray[np.float64]
+    ],
+    target_location: Union[
+        List[float], Tuple[float, float, float], NDArray[np.float64]
+    ],
+) -> Tuple[float, float, float]:
     """let the camera look at the object"""
     direction = Vector(target_location) - Vector(camera_location)
     # the rotation needed to align the default forward direction (-Z) with the computed direction vector
@@ -60,8 +65,8 @@ if __name__ == "__main__":
     monkey.set_location([0, 0, 0])
     monkey.set_rotation_euler([0, 0, 0])
     object_position = np.array([0, 0, 0])
-    # The r will change in 10%.
-    r = random.uniform(4.5, 5.5)
+    # The r will change in 10%. 
+    R = random.uniform(4.5, 5.5)
 
     theta = random.uniform(0, math.pi)
     phi = random.uniform(0, 2 * math.pi)
@@ -76,7 +81,10 @@ if __name__ == "__main__":
 
     # Create a point light next to it
 
-    cam_pose = bproc.math.build_transformation_mat([0, -5, 0], [np.pi / 2, 0, 0])
+    cam_pose = bproc.math.build_transformation_mat(
+        [0, -5, 0],
+        [np.pi / 2, 0, 0]
+    )
     bproc.camera.add_camera_pose(cam_pose)
 
     # get two simple vectors which perpendicular to v
