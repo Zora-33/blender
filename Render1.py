@@ -58,58 +58,76 @@ def change_to_spherical(theta: float, phi: float, radius: float) -> Tuple[float,
 if __name__ == "__main__":
     bproc.init()
 
-    # Create a simple object:
+    # USER INPUT
+    n_images: int = 10
+    #
+    distance_object_camera: Tuple[int, int] = (10, 15)  # milli meter
+    # light settings
+    light_energy: Tuple[int, int] = (300, 600)
+    distance_light_camera: Tuple[int, int] = (1, 50)  # milli meter
+
 
     # Object position as coordinate origin
-    monkey = bproc.object.create_primitive("MONKEY")
-    monkey.set_location([0, 0, 0])
-    monkey.set_rotation_euler([0, 0, 0])
     object_position = np.array([0, 0, 0])
-    # The r will change in 10%. 
-    radius = random.uniform(4.5, 5.5)
 
-    theta = random.uniform(0, math.pi)
-    phi = random.uniform(0, 2 * math.pi)
+    monkey = bproc.object.create_primitive("MONKEY")
+    monkey.set_location(object_position)
+    monkey.set_rotation_euler([0, 0, 0])
 
-    camera_position = change_to_spherical(theta, phi, radius)
-    rotation_euler = look_at(camera_position, object_position)
-    cam_pose = bproc.math.build_transformation_mat(camera_position, rotation_euler)
+    # for reproducibility set seed of pseudo-random number generator
+    random.seed(42)
 
-    bproc.camera.add_camera_pose(cam_pose)
+    # TODO: create loop
+    # TODO: modularize script, i.e. put into self-contained functions
+    for i in range(n_images):
+        # randomness
+        dist_obj_cam = random.uniform(min(distance_object_camera), max(distance_object_camera))
+        dist_light_cam = random.uniform(min(distance_light_camera), max(distance_light_camera))
+        brightness = random.uniform(min(light_energy), max(light_energy))
 
-    # Light position will be in solar coordinate from a random distribution
+        theta = random.uniform(0, math.pi)
+        phi = random.uniform(0, 2 * math.pi)
 
-    # Create a point light next to it
+        camera_position = change_to_spherical(theta, phi, dist_obj_cam)
+        rotation_euler = look_at(camera_position, object_position)
+        cam_pose = bproc.math.build_transformation_mat(camera_position, rotation_euler)
 
-    cam_pose = bproc.math.build_transformation_mat(
-        [0, -5, 0],[np.pi / 2, 0, 0]
-    )
-    bproc.camera.add_camera_pose(cam_pose)
+        bproc.camera.add_camera_pose(cam_pose)
 
-    # get two simple vectors which perpendicular to v
-    perp1, perp2 = create_perpendicular_vector(camera_position)
+        # Light position will be in solar coordinate from a random distribution
 
-    circle_x, circle_y = random_point_on_unit_circle()
+        # Create a point light next to it
 
-    # light position
-    light_position = camera_position + circle_x * perp1 + circle_y * perp2
+        cam_pose = bproc.math.build_transformation_mat(
+            [0, -5, 0],[np.pi / 2, 0, 0]
+        )
+        bproc.camera.add_camera_pose(cam_pose)
 
-    light = bproc.types.Light()
-    light.set_location(light_position.tolist())
-    light.set_type("POINT")
-    light.set_energy(500)
+        # get two simple vectors which perpendicular to v
+        perp1, perp2 = create_perpendicular_vector(camera_position)
 
-    bproc.renderer.set_output_format(file_format="PNG")
-    bpy.context.scene.render.resolution_x = 1920
-    bpy.context.scene.render.resolution_y = 1080
-    bpy.context.scene.cycles.samples = 100
+        circle_x, circle_y = random_point_on_unit_circle()
 
-    # rendering
-    data = bproc.renderer.render()
-    print(f"Type {type(data)}")
+        # light position
+        light_position = camera_position + circle_x * perp1 + circle_y * perp2
 
-    output_dir = Path("output")
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
-    bproc.writer.write_hdf5(output_dir.as_posix(), data)
+        light = bproc.types.Light()
+        light.set_location(light_position.tolist())
+        light.set_type("POINT")
+        light.set_energy(brightness)
+
+        bproc.renderer.set_output_format(file_format="PNG")
+        # image ratio 4:3
+        bpy.context.scene.render.resolution_x = 640
+        bpy.context.scene.render.resolution_y = 544
+        bpy.context.scene.cycles.samples = 100
+
+        # rendering
+        data = bproc.renderer.render()
+        print(f"Type {type(data)}")
+
+        output_dir = Path("output")
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True)
+        bproc.writer.write_hdf5(output_dir.as_posix(), data)
 
