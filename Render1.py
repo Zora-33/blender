@@ -66,12 +66,12 @@ if __name__ == "__main__":
     monkey.set_rotation_euler([0, 0, 0])
     object_position = np.array([0, 0, 0])
     # The r will change in 10%. 
-    R = random.uniform(4.5, 5.5)
+    radius = random.uniform(4.5, 5.5)
 
     theta = random.uniform(0, math.pi)
     phi = random.uniform(0, 2 * math.pi)
 
-    camera_position = change_to_spherical(theta, phi, r)
+    camera_position = change_to_spherical(theta, phi, radius)
     rotation_euler = look_at(camera_position, object_position)
     cam_pose = bproc.math.build_transformation_mat(camera_position, rotation_euler)
 
@@ -82,8 +82,7 @@ if __name__ == "__main__":
     # Create a point light next to it
 
     cam_pose = bproc.math.build_transformation_mat(
-        [0, -5, 0],
-        [np.pi / 2, 0, 0]
+        [0, -5, 0],[np.pi / 2, 0, 0]
     )
     bproc.camera.add_camera_pose(cam_pose)
 
